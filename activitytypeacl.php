@@ -106,3 +106,162 @@ function activitytypeacl_civicrm_caseTypes(&$caseTypes) {
 function activitytypeacl_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _activitytypeacl_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
+
+/**
+ * Implementation of hook_civicrm_permission
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_permission
+ */
+function activitytypeacl_civicrm_permission(&$permissions) {
+  $activities = CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities();
+  $prefix = ts('CiviCRM') . ': ';
+  $actions = array('add', 'view', 'edit', 'delete');
+  foreach ($activities as $id => $type) {
+    $label = CRM_Core_PseudoConstant::getLabel('CRM_Activity_BAO_Activity', 'activity_type_id', $id);
+    foreach ($actions as $action) {
+      $permissions[$action . ' activities of type ' . $type] = $prefix . ts($action . ' activities of type ') . $label;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_civicrm_queryObjects
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_queryObjects
+ */
+function activitytypeacl_civicrm_queryObjects(&$queryObjects, $type) {
+  if ($type == "Contact") {
+    $queryObjects[] = new CRM_ActivityTypeACL_BAO_Query();
+  }
+}
+
+/**
+ * Implementation of hook_civicrm_buildForm
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_buildForm
+ */
+function activitytypeacl_civicrm_buildForm($formName, &$form) {
+  // Restrict activity types available in the "New Activity" creation list on contact summary page.
+  if ($formName == "CRM_Activity_Form_ActivityLinks") {
+    CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
+    $form->assign('activityTypes', $activityOptions);
+  }
+
+  // Restrict activity types available in the filters on activity tab on contact summary page.
+  if ($formName == "CRM_Activity_Form_ActivityFilter") {
+    CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
+    asort($activityOptions);
+
+    $form->add('select', 'activity_type_filter_id', ts('Include'), array('' => ts('- all activity type(s) -')) + $activityOptions);
+    $form->add('select', 'activity_type_exclude_filter_id', ts('Exclude'), array('' => ts('- select activity type -')) + $activityOptions);
+  }
+
+  // Restrict activity types available in the filters on activity searches.
+  if ($formName == "CRM_Activity_Form_Search" || $formName == "CRM_Contact_Form_Search_Advanced") {
+    $form->addSelect('activity_type_id', array(
+      'entity' => 'activity',
+      'label' => ts('Activity Type(s)'),
+      'multiple' => 'multiple',
+      'option_url' => NULL,
+      'placeholder' => ts('- any -'),
+      'options' => CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE))
+    );
+  }
+
+  // Restrict view for activities with unpermissioned activity types.
+  if ($formName == "CRM_Activity_Form_ActivityView") {
+    $activityTypeId = CRM_Utils_Request::retrieve('atype', 'Integer');
+    $activityType = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, " AND v.value = {$activityTypeId}", "name");
+    if (!CRM_Core_Permission::check('view activities of type ' . $activityType[$activityTypeId])) {
+      CRM_Utils_System::permissionDenied();
+      CRM_Utils_System::civiExit();
+    }
+  }
+
+  // Restrict activity types for forms.
+  if ($formName == "CRM_Activity_Form_Activity") {
+
+    // Restrict list of activity types available on activity creation form.
+    if ($form->_action & CRM_Core_Action::ADD) {
+      $form->add('select', 'activity_type_id', ts('Activity Type'),
+        array('' => '- ' . ts('select') . ' -') + CRM_Afabc_BAO_Afabc::getPermissionedActivities($activities, CRM_Core_Action::ADD, FALSE, TRUE),
+        FALSE, array(
+          'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
+          'class' => 'crm-select2 required',
+        )
+      );
+    }
+    if (isset($form->_activityTypeId)) {
+      $activityType = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, " AND v.value = {$form->_activityTypeId}", "name");
+    }
+
+    // Restrict view for activities with unpermissioned activity types.
+    if ($form->_action & CRM_Core_Action::VIEW) {
+      if (!CRM_Core_Permission::check('view activities of type ' . $activityType[$form->_activityTypeId])) {
+        CRM_Utils_System::permissionDenied();
+        CRM_Utils_System::civiExit();
+      }
+
+      // Permit edit button display for activities.
+      if (CRM_Core_Permission::check('edit activities of type ' . $activityType[$form->_activityTypeId])) {
+        $form->assign('canEdit', TRUE);
+      }
+      // Permit delete button display for activities.
+      if (CRM_Core_Permission::check('delete activities of type ' . $activityType[$form->_activityTypeId])) {
+        $form->assign('canDelete', TRUE);
+      }
+    }
+
+    // Restrict delete for activities with unpermissioned activity types.
+    if ($form->_action & CRM_Core_Action::DELETE) {
+      if (!CRM_Core_Permission::check('delete activities of type ' . $activityType[$form->_activityTypeId])) {
+        CRM_Utils_System::permissionDenied();
+        CRM_Utils_System::civiExit();
+      }
+    }
+
+    // Restrict edit for activities with unpermissioned activity types.
+    if (($form->_action & CRM_Core_Action::UPDATE) && isset($form->_activityTypeId)) {
+      if (!CRM_Core_Permission::check('edit activities of type ' . $activityType[$form->_activityTypeId])) {
+        CRM_Utils_System::permissionDenied();
+        CRM_Utils_System::civiExit();
+      }
+      else {
+        // Restrict available activities for edit.
+        $form->add('select', 'activity_type_id', ts('Activity Type'),
+          array('' => '- ' . ts('select') . ' -') + CRM_Afabc_BAO_Afabc::getPermissionedActivities($activities, CRM_Core_Action::UPDATE, FALSE, TRUE),
+          FALSE, array(
+            'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
+            'class' => 'crm-select2 required',
+          )
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_civicrm_alterReportVar
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterReportVar
+ */
+function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
+  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Contact_Detail') {
+      CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var->_formComponent['activity_civireport'], "constituent");
+  }
+  if ($varType == 'columns') {
+    if (isset($var['civicrm_activity']['filters']['activity_type_id'])) {
+      $var['civicrm_activity']['filters']['activity_type_id'] = array(
+        'title' => ts('Activity Type'),
+        'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+        'options' => CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE),
+      );
+    }
+  }
+  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Activity') {
+    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "report");
+  }
+  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_ActivitySummary') {
+    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "summary");
+  }
+}

@@ -22,6 +22,6 @@
   </compatibility>
   <comments>This is a new, undeveloped module</comments>
   <civix>
-    <namespace>CRM/Activitytypeacl</namespace>
+    <namespace>CRM/ActivityTypeACL</namespace>
   </civix>
 </extension>
