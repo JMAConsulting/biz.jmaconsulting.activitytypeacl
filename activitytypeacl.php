@@ -142,14 +142,14 @@ function activitytypeacl_civicrm_queryObjects(&$queryObjects, $type) {
  */
 function activitytypeacl_civicrm_buildForm($formName, &$form) {
   // Restrict activity types available in the "New Activity" creation list on contact summary page.
-  if ($formName == "CRM_Activity_Form_ActivityLinks") {
-    CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
-    $form->assign('activityTypes', $activityOptions);
-  }
+  /* if ($formName == "CRM_Activity_Form_ActivityLinks") { */
+  /*   CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE); */
+  /*   $form->assign('activityTypes', $activityOptions); */
+  /* } */
 
   // Restrict activity types available in the filters on activity tab on contact summary page.
   if ($formName == "CRM_Activity_Form_ActivityFilter") {
-    CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
     asort($activityOptions);
 
     $form->add('select', 'activity_type_filter_id', ts('Include'), array('' => ts('- all activity type(s) -')) + $activityOptions);
@@ -164,7 +164,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       'multiple' => 'multiple',
       'option_url' => NULL,
       'placeholder' => ts('- any -'),
-      'options' => CRM_Afabc_BAO_Afabc::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE))
+      'options' => CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE))
     );
   }
 
@@ -184,7 +184,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
     // Restrict list of activity types available on activity creation form.
     if ($form->_action & CRM_Core_Action::ADD) {
       $form->add('select', 'activity_type_id', ts('Activity Type'),
-        array('' => '- ' . ts('select') . ' -') + CRM_Afabc_BAO_Afabc::getPermissionedActivities($activities, CRM_Core_Action::ADD, FALSE, TRUE),
+        array('' => '- ' . ts('select') . ' -') + CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activities, CRM_Core_Action::ADD, FALSE, TRUE),
         FALSE, array(
           'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
           'class' => 'crm-select2 required',
@@ -229,7 +229,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       else {
         // Restrict available activities for edit.
         $form->add('select', 'activity_type_id', ts('Activity Type'),
-          array('' => '- ' . ts('select') . ' -') + CRM_Afabc_BAO_Afabc::getPermissionedActivities($activities, CRM_Core_Action::UPDATE, FALSE, TRUE),
+          array('' => '- ' . ts('select') . ' -') + CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activities, CRM_Core_Action::UPDATE, FALSE, TRUE),
           FALSE, array(
             'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
             'class' => 'crm-select2 required',
@@ -258,10 +258,13 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
       );
     }
   }
-  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Activity') {
-    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "report");
-  }
   if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_ActivitySummary') {
     CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "summary");
+  }
+}
+
+function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
+  if ($entity == "Activity") {
+    $clauses['activity_type_id'][] = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");
   }
 }
