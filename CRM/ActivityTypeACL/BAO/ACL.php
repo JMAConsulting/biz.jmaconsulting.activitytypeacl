@@ -102,7 +102,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
       $query[] = "civicrm_activity.activity_type_id" . $clause;
     }
     if ($context == "report") {
-      return " AND ( activity_civireport.activity_type_id" . $clause . " )";
+      return " AND ( activity_type_id" . $clause . " )";
     }
     if ($context == "summary") {
       $where = $query->getVar('_where');

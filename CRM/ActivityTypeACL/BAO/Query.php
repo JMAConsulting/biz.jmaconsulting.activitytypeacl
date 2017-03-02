@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.6                                                |
+ | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2017                                |
+ | Copyright JMAConsulting 2004-2017                                  |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -55,7 +55,7 @@ class CRM_ActivityTypeACL_BAO_Query {
    */
   public static function where(&$query) {
     if (CRM_Utils_Array::value('civicrm_activity', $query->_tables)) {
-      $activities = CRM_Afabc_BAO_Afabc::getPermissionedActivities();
+      $activities = CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities();
       $ids = implode(',', array_keys($activities));
       $query->_where[] = array("civicrm_activity.activity_type_id IN (" . $ids . ")");
     }
