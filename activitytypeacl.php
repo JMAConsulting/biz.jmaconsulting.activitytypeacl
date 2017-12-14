@@ -142,11 +142,16 @@ function activitytypeacl_civicrm_queryObjects(&$queryObjects, $type) {
  */
 function activitytypeacl_civicrm_buildForm($formName, &$form) {
   // Restrict activity types available in the "New Activity" creation list on contact summary page.
-  /* if ($formName == "CRM_Activity_Form_ActivityLinks") { */
-  /*   CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE); */
-  /*   $form->assign('activityTypes', $activityOptions); */
-  /* } */
-
+  if ($formName == "CRM_Activity_Form_ActivityLinks") {
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
+    $activityTypes = CRM_Core_Smarty::singleton()->get_template_vars('activityTypes');
+    foreach ($activityTypes as $key => $activity) {
+      if (!array_key_exists($activity['value'], $activityOptions)) {
+        unset($activityTypes[$key]);
+      }
+    }
+    $form->assign('activityTypes', $activityTypes);
+  }
   // Restrict activity types available in the filters on activity tab on contact summary page.
   if ($formName == "CRM_Activity_Form_ActivityFilter") {
     CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
@@ -191,7 +196,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
         )
       );
     }
-    if (isset($form->_activityTypeId)) {
+    if (!empty($form->_activityTypeId)) {
       $activityType = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, " AND v.value = {$form->_activityTypeId}", "name");
     }
 
@@ -263,6 +268,11 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
   }
 }
 
+/**
+ * Implementation of hook_civicrm_selectWhereClause
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_selectWhereClause
+ */
 function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == "Activity") {
     $clauses['activity_type_id'][] = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");

@@ -98,6 +98,9 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
       return;
     }
     $clause = " NOT IN ( " . implode(",", array_keys($disallowedActivities)) . " ) ";
+    if ($context == "activitytab") {
+      return "civicrm_activity.activity_type_id" . $clause;
+    }
     if ($context == "search") {
       $query[] = "civicrm_activity.activity_type_id" . $clause;
     }
