@@ -194,14 +194,28 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
 
     // Restrict list of activity types available on activity creation form.
     if ($form->_action & CRM_Core_Action::ADD) {
+      $unwanted = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, "AND v.name = 'Print PDF Letter'");
+      $fActivityTypes = array_diff_key(CRM_Core_PseudoConstant::ActivityType(FALSE), $unwanted);
+      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($allowedActivities, CRM_Core_Action::ADD, FALSE, TRUE);
+      $fActivityTypes = array_intersect_key($allowedActivities, $fActivityTypes);
+
       $form->add('select', 'activity_type_id', ts('Activity Type'),
-        array('' => '- ' . ts('select') . ' -') + CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activities, CRM_Core_Action::ADD, FALSE, TRUE),
+        array('' => '- ' . ts('select') . ' -') + $allowedActivities,
         FALSE, array(
           'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
           'class' => 'crm-select2 required',
         )
       );
+
+      // Restrict follow up activities too.
+      $form->add('select', 'followup_activity_type_id', ts('Followup Activity'),
+        array('' => '- ' . ts('select') . ' -') + $fActivityTypes,
+        FALSE, array(
+          'class' => 'crm-select2',
+        )
+      );
     }
+
     if (!empty($form->_activityTypeId)) {
       $activityType = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, " AND v.value = {$form->_activityTypeId}", "name");
     }
@@ -239,20 +253,22 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       }
       else {
         // Restrict available activities for edit.
+        $unwanted = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, "AND v.name = 'Print PDF Letter'");
+        $fActivityTypes = array_diff_key(CRM_Core_PseudoConstant::ActivityType(FALSE), $unwanted);
+        CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($allowedActivities, CRM_Core_Action::UPDATE, FALSE, TRUE);
+        $fActivityTypes = array_intersect_key($allowedActivities, $fActivityTypes);
+
         $form->add('select', 'activity_type_id', ts('Activity Type'),
-          array('' => '- ' . ts('select') . ' -') + CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activities, CRM_Core_Action::UPDATE, FALSE, TRUE),
+          array('' => '- ' . ts('select') . ' -') + $allowedActivities,
           FALSE, array(
             'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
             'class' => 'crm-select2 required',
           )
         );
+
         // Restrict follow up activities too.
-        $unwanted = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, "AND v.name = 'Print PDF Letter'");
-        $activityTypes = array_diff_key(CRM_Core_PseudoConstant::ActivityType(FALSE), $unwanted);
-        CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($allowedActivities, CRM_Core_Action::UPDATE, FALSE, TRUE);
-        $activityTypes = array_intersect_key($allowedActivities, $activityTypes);
         $form->add('select', 'followup_activity_type_id', ts('Followup Activity'),
-          array('' => '- ' . ts('select') . ' -') + $activityTypes,
+          array('' => '- ' . ts('select') . ' -') + $fActivityTypes,
           FALSE, array(
             'class' => 'crm-select2',
           )
