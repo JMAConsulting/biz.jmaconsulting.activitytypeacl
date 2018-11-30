@@ -57,7 +57,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
    **/
   public static function getPermissionedActivities(&$activities = NULL, $action = CRM_Core_Action::VIEW, $resetCache = FALSE, $label = FALSE) {
     if (empty($activities)) {
-      $activities = CRM_Core_PseudoConstant::activityType(TRUE, FALSE, FALSE, 'name');
+      $activities = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'name', TRUE);
     }
     $actions = array(
       CRM_Core_Action::VIEW => 'view',
@@ -91,7 +91,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
    *  Context on which the clause must be modified.
    **/
   public static function getAdditionalActivityClause(&$query = NULL, $context) {
-    $activities = CRM_Core_PseudoConstant::activityType(TRUE, FALSE, FALSE, 'name');
+    $activities = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'name', TRUE);
     $permissionedActivities = self::getPermissionedActivities();
     $disallowedActivities = array_diff_key($activities, $permissionedActivities);
     if (empty($disallowedActivities)) {

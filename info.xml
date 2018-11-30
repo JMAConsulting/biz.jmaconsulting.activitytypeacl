@@ -5,13 +5,13 @@
   <description>Restrict add/view/edit/delete of activity types based on roles.</description>
   <license>AGPL-3.0</license>
   <maintainer>
-    <author>Edsel</author>
-    <email>edsel.lopez@jmaconsulting.biz</email>
+    <author>JMA</author>
+    <email>support@jmaconsulting.biz</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">http://FIXME</url>
-    <url desc="Documentation">http://FIXME</url>
-    <url desc="Support">http://FIXME</url>
+    <url desc="Main Extension Page">https://github.com/JMAConsulting/biz.jmaconsulting.activitytypeacl</url>
+    <url desc="Documentation">https://github.com/JMAConsulting/biz.jmaconsulting.activitytypeacl/wiki/Documentation</url>
+    <url desc="Support">https://github.com/JMAConsulting/biz.jmaconsulting.activitytypeacl/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2017-02-23</releaseDate>
@@ -19,8 +19,16 @@
   <develStage>alpha</develStage>
   <compatibility>
     <ver>4.7</ver>
+    <ver>5.0</ver>
+    <ver>5.1</ver>
+    <ver>5.2</ver>
+    <ver>5.3</ver>
+    <ver>5.4</ver>
+    <ver>5.5</ver>
+    <ver>5.6</ver>
+    <ver>5.7</ver>
   </compatibility>
-  <comments>This is a new, undeveloped module</comments>
+  <comments>This module was developed by JMA Consulting.</comments>
   <civix>
     <namespace>CRM/ActivityTypeACL</namespace>
   </civix>

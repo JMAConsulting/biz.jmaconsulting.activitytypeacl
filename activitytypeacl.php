@@ -182,6 +182,12 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       CRM_Utils_System::civiExit();
     }
   }
+  if ($formName == "CRM_Report_Form_Contact_Detail") {
+    CRM_Core_Session::singleton()->set('isConstituent', TRUE);
+  }
+  else {
+    CRM_Core_Session::singleton()->set('isConstituent', FALSE);
+  }
 
   // Restrict activity types for forms.
   if ($formName == "CRM_Activity_Form_Activity") {
@@ -240,6 +246,17 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
             'class' => 'crm-select2 required',
           )
         );
+        // Restrict follow up activities too.
+        $unwanted = CRM_Core_OptionGroup::values('activity_type', FALSE, FALSE, FALSE, "AND v.name = 'Print PDF Letter'");
+        $activityTypes = array_diff_key(CRM_Core_PseudoConstant::ActivityType(FALSE), $unwanted);
+        CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($allowedActivities, CRM_Core_Action::UPDATE, FALSE, TRUE);
+        $activityTypes = array_intersect_key($allowedActivities, $activityTypes);
+        $form->add('select', 'followup_activity_type_id', ts('Followup Activity'),
+          array('' => '- ' . ts('select') . ' -') + $activityTypes,
+          FALSE, array(
+            'class' => 'crm-select2',
+          )
+        );
       }
     }
   }
@@ -252,7 +269,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
  */
 function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
   if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Contact_Detail') {
-      CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var->_formComponent['activity_civireport'], "constituent");
+    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var->_formComponent['activity_civireport'], "constituent");
   }
   if ($varType == 'columns') {
     if (isset($var['civicrm_activity']['filters']['activity_type_id'])) {
@@ -275,6 +292,9 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
  */
 function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == "Activity") {
-    $clauses['activity_type_id'][] = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");
+    $constituent = CRM_Core_Session::singleton()->get('isConstituent');
+    if (!$constituent) {
+      $clauses['activity_type_id'][] = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");
+    }
   }
 }
