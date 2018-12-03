@@ -57,6 +57,9 @@ class CRM_ActivityTypeACL_BAO_Query {
     if (CRM_Utils_Array::value('civicrm_activity', $query->_tables)) {
       $activities = CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities();
       $ids = implode(',', array_keys($activities));
+      if (empty($ids)) {
+        $ids = 0;
+      }
       $query->_where[] = array("civicrm_activity.activity_type_id IN (" . $ids . ")");
     }
   }
