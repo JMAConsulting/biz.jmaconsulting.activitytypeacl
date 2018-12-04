@@ -9,4 +9,4 @@
 
 ## Getting Started (Usage)
 
-Please refer to documentation on the [wiki](https://github.com/JMAConsulting/biz.jmaconsulting.activitytypeacl/wiki/Documentation).
+Please refer to documentation on the [wiki](https://github.com/JMAConsulting/biz.jmaconsulting.activitytypeacl/wiki/Configuring-Activity-Type-Permissions).
