@@ -113,7 +113,7 @@ function activitytypeacl_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) 
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_permission
  */
 function activitytypeacl_civicrm_permission(&$permissions) {
-  $activities = CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities();
+  $activities = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'name', TRUE);
   $prefix = ts('CiviCRM') . ': ';
   $actions = array('add', 'view', 'edit', 'delete');
   foreach ($activities as $id => $type) {
