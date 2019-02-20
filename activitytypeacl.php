@@ -279,6 +279,21 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
 }
 
 /**
+ * Implements hook_civicrm_postProcess().
+ *
+ * @param string $formName
+ * @param CRM_Core_Form $form
+ */
+function activitytypeacl_civicrm_postProcess($formName, &$form) {
+  if ($formName == "CRM_Admin_Form_Options" && $form->getVar('_gName') == 'activity_type' && ($form->_action & CRM_Core_Action::ADD)) {
+    $message = "Please review permissions for the new activity type <a href='%1'>here</a>, or contact your System Administrator.";
+    $url = CRM_Utils_System::url('admin/people/permissions', NULL, TRUE);
+    $status = ts($message, array(1 => $url));
+    CRM_Core_Session::setStatus($status, ts('Activity Type ACL Notice'));
+  }
+}
+
+/**
  * Implementation of hook_civicrm_alterReportVar
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterReportVar
