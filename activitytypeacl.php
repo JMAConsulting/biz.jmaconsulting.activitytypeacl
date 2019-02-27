@@ -200,7 +200,7 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       $fActivityTypes = array_intersect_key($allowedActivities, $fActivityTypes);
 
       $form->add('select', 'activity_type_id', ts('Activity Type'),
-        array('' => '- ' . ts('select') . ' -') + $allowedActivities,
+        array('' => '- ' . ts('select') . ' -') + $fActivityTypes,
         FALSE, array(
           'onchange' => "CRM.buildCustomData( 'Activity', this.value );",
           'class' => 'crm-select2 required',
