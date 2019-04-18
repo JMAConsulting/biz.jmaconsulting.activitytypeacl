@@ -276,6 +276,76 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       }
     }
   }
+  if ($formName == "CRM_Case_Form_CaseView") {
+    $xmlProcessor = new CRM_Case_XMLProcessor_Process();
+    $aTypes = $xmlProcessor->get($form->_caseType, 'ActivityTypes', TRUE);
+
+    $allActTypes = CRM_Activity_BAO_Activity::buildOptions('activity_type_id', 'validate');
+    $allCaseActTypes = CRM_Case_PseudoConstant::caseActivityType();
+    $emailActivityType = array_search('Email', $allActTypes);
+    $pdfActivityType = array_search('Print PDF Letter', $allActTypes);
+
+    // For the add activity widget.
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($allowedActivities, CRM_Core_Action::ADD, FALSE, TRUE);
+
+    // For the activity search form.
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($viewActivities, CRM_Core_Action::VIEW, FALSE, TRUE);
+    foreach ($allCaseActTypes as $typeDetails) {
+      if (!in_array($typeDetails['name'], array('Open Case'))) {
+        $aTypesFilter[$typeDetails['id']] = CRM_Utils_Array::value('label', $typeDetails);
+      }
+    }
+    $aTypes = array_intersect_key($allowedActivities, $aTypes);
+    $aTypesFilter = array_intersect_key($viewActivities, $aTypesFilter);
+    //CRM_Case_Form_CaseView::activityForm($form, $aTypes);
+    $form->add('select', 'activity_type_filter_id', ts('Activity Type'), array('' => ts('- select activity type -')) + $aTypesFilter, FALSE, array('id' => 'activity_type_filter_id_' . $form->_caseID));
+
+    // remove Open Case activity type since we're inside an existing case
+    if ($openActTypeId = array_search('Open Case', $allActTypes)) {
+      unset($aTypes[$openActTypeId]);
+    }
+
+    // Only show "link cases" activity if other cases exist.
+    $linkActTypeId = array_search('Link Cases', $allActTypes);
+    if ($linkActTypeId) {
+      $count = civicrm_api3('Case', 'getcount', array(
+        'check_permissions' => TRUE,
+        'id' => array('!=' => $form->_caseID),
+        'is_deleted' => 0,
+      ));
+      if (!$count) {
+        unset($aTypes[$linkActTypeId]);
+      }
+    }
+
+    if (!$xmlProcessor->getNaturalActivityTypeSort()) {
+      asort($aTypes);
+    }
+
+    $activityLinks = array('' => ts('Add Activity'));
+    foreach ($aTypes as $type => $label) {
+      if ($type == $emailActivityType) {
+        $url = CRM_Utils_System::url('civicrm/activity/email/add',
+          "action=add&context=standalone&reset=1&caseid={$form->_caseID}&atype=$type",
+          FALSE, NULL, FALSE
+        );
+      }
+      elseif ($type == $pdfActivityType) {
+        $url = CRM_Utils_System::url('civicrm/activity/pdf/add',
+          "action=add&context=standalone&reset=1&cid={$form->_contactID}&caseid={$form->_caseID}&atype=$type",
+          FALSE, NULL, FALSE);
+      }
+      else {
+        $url = CRM_Utils_System::url('civicrm/case/activity',
+          "action=add&reset=1&cid={$form->_contactID}&caseid={$form->_caseID}&atype=$type",
+          FALSE, NULL, FALSE
+        );
+      }
+      $activityLinks[$url] = $label;
+    }
+
+    $form->add('select', 'add_activity_type_id', '', $activityLinks, FALSE, array('class' => 'crm-select2 crm-action-menu fa-calendar-check-o twenty'));
+  }
 }
 
 /**
@@ -313,6 +383,12 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
   }
   if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_ActivitySummary') {
     CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "summary");
+  }
+  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Case_TimeSpent') {
+    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "summary");
+  }
+  if ($varType == 'sql' && get_class($object) == 'CRM_Report_Form_Case_Detail') {
+    CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($var, "case");
   }
 }
 
