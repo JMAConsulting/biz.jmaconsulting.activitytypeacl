@@ -9,6 +9,25 @@ require_once 'activitytypeacl.civix.php';
  */
 function activitytypeacl_civicrm_config(&$config) {
   _activitytypeacl_civix_civicrm_config($config);
+  if (strpos($_SERVER['REQUEST_URI'], 'civicrm/case/report') !== false) {
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
+    $flip = array_flip($activityOptions);
+    foreach ([
+      [TRUE, FALSE],
+      [TRUE, TRUE],
+      [FALSE, TRUE],
+      ] as $value) {
+      list($all, $indexName) = $value;
+      CRM_Case_PseudoConstant::caseActivityType($indexName, $all);
+      $cache = (int) $indexName . '_' . (int) $all;
+      if ($cache == "0_1") {
+        CRM_Case_PseudoConstant::$activityTypeList[$cache] = array_intersect_key(CRM_Case_PseudoConstant::$activityTypeList[$cache], $activityOptions);
+      }
+      else {
+        CRM_Case_PseudoConstant::$activityTypeList[$cache] = array_intersect_key(CRM_Case_PseudoConstant::$activityTypeList[$cache], $flip);
+      }
+    }
+  }
 }
 
 /**

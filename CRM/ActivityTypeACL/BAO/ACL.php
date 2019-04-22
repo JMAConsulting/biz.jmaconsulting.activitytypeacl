@@ -397,6 +397,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
 
     $caseActivities = array();
 
+    $activities = CRM_Core_PseudoConstant::activityType(TRUE, TRUE, FALSE, 'name', TRUE);
     while ($dao->fetch()) {
       $caseActivity = array();
       $caseActivityId = $dao->id;
@@ -409,6 +410,15 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
       //to access given case activity record.
       if (!$allowView && !$allowEdit && !$allowDelete) {
         continue;
+      }
+      if (!CRM_Core_Permission::check('view activities of type ' . $activities[$dao->activity_type_id])) {
+        $allowView = FALSE;
+      }
+      if (!CRM_Core_Permission::check('edit activities of type ' . $activities[$dao->activity_type_id])) {
+        $allowEdit = FALSE;
+      }
+      if (!CRM_Core_Permission::check('delete activities of type ' . $activities[$dao->activity_type_id])) {
+        $allowDelete = FALSE;
       }
 
       $caseActivities[$caseActivityId]['DT_RowId'] = $caseActivityId;
