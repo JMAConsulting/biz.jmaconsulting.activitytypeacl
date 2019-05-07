@@ -154,6 +154,17 @@ function activitytypeacl_civicrm_queryObjects(&$queryObjects, $type) {
   }
 }
 
+function activitytypeacl_civicrm_apiWrappers(&$wrappers, $apiRequest) {
+  if (strpos($_SERVER['REQUEST_URI'], 'civicrm/a') !== false) {
+    if ($apiRequest['entity'] == 'OptionValue' && $apiRequest['action'] == 'get') {
+      $wrappers[] = new CRM_ActivityTypeACL_APIWrappers_ACL();
+    }
+  }
+  if ($apiRequest['entity'] == 'CaseType' && $apiRequest['action'] == 'get') {
+    $wrappers[] = new CRM_ActivityTypeACL_APIWrappers_ACL();
+  }
+}
+
 /**
  * Implementation of hook_civicrm_buildForm
  *
@@ -420,7 +431,7 @@ function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == "Activity") {
     $constituent = CRM_Core_Session::singleton()->get('isConstituent');
     if (!$constituent) {
-      $clauses['activity_type_id'][] = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");
+      $clauses['activity_type_id'] = array(CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report"));
     }
   }
 }
