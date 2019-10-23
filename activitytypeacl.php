@@ -9,7 +9,7 @@ require_once 'activitytypeacl.civix.php';
  */
 function activitytypeacl_civicrm_config(&$config) {
   _activitytypeacl_civix_civicrm_config($config);
-  if (strpos($_SERVER['REQUEST_URI'], 'civicrm/case/report') !== false) {
+  if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], 'civicrm/case/report') !== false) {
     CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
     $flip = array_flip($activityOptions);
     foreach ([
