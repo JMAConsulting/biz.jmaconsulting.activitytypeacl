@@ -1,5 +1,7 @@
 # biz.jmaconsulting.activitytypeacl
 
+The Activity Type ACL extension allows permissions to be set by user role to add, view, edit and delete Activities. If a logged in user has a role that provides a permission for a specific activity type, then they are authorized to do it for all activities of that type. 
+
 ## Installation
 
 1. As part of your general CiviCRM installation, you should set a CiviCRM Extensions Directory at Administer >> System Settings >> Directories.
