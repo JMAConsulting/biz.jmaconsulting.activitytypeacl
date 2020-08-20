@@ -431,7 +431,13 @@ function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
   if ($entity == "Activity") {
     $constituent = CRM_Core_Session::singleton()->get('isConstituent');
     if (!$constituent) {
-      $clauses['activity_type_id'] = array(CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report"));
+      $whereClause = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "report");
+      if (!empty($clauses['activity_type_id'])) {
+        $clauses['activity_type_id'] .= $whereClause;
+      }
+      else {
+        $clauses['activity_type_id'] = $whereClause;
+      }
     }
   }
 }
