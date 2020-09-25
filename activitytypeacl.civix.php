@@ -195,8 +195,7 @@ function _activitytypeacl_civix_civicrm_caseTypes(&$caseTypes) {
     $name = preg_replace('/\.xml$/', '', basename($file));
     if ($name != CRM_Case_XMLProcessor::mungeCaseType($name)) {
       $errorMessage = sprintf("Case-type file name is malformed (%s vs %s)", $name, CRM_Case_XMLProcessor::mungeCaseType($name));
-      CRM_Core_Error::fatal($errorMessage);
-      // throw new CRM_Core_Exception($errorMessage);
+      throw new CRM_Core_Exception($errorMessage);
     }
     $caseTypes[$name] = array(
       'module' => 'biz.jmaconsulting.activitytypeacl',
