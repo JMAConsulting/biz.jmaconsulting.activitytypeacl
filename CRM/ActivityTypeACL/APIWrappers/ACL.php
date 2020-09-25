@@ -12,7 +12,7 @@ class CRM_ActivityTypeACL_APIWrappers_ACL implements API_Wrapper {
       $activityOptions[CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', 'Open Case')] = "Open Case";
       $apiRequest['params']['value'] = ['IN' => array_keys($activityOptions)];
     }
-    
+
     return $apiRequest;
   }
 
@@ -39,7 +39,7 @@ class CRM_ActivityTypeACL_APIWrappers_ACL implements API_Wrapper {
   public static function unsetActivitySet(&$activity) {
     CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
     foreach ($activity as $key => $name) {
-      if (!array_search($name['name'], $activityOptions) && $name['name'] != "Open Case") {
+      if (!empty($name['name']) && !array_search($name['name'], $activityOptions) && $name['name'] != "Open Case") {
         unset($activity[$key]);
       }
     }

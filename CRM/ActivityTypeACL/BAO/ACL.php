@@ -126,15 +126,20 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
         a.activity_type_id " . $clause;
     }
     if ($context == "case") {
-      $where = $query->getVar('_where');
-      if (empty($where)) {
-        $op = " WHERE ";
+      $clauses = [];
+      foreach ([
+          'civireport_activity_last_civireport' => $query->getVar('_activityLast'),
+          'activity_last_completed_civireport' => $query->getVar('_activityLastCompleted'),
+        ] as $tableAlias => $tableSelected) {
+        if ($tableSelected) {
+          $clauses[] = sprintf("( %s.activity_type_id%s )", $tableAlias, $clause);
+        }
       }
-      else {
-        $op = $where . " AND ";
+      if (!empty($clauses)) {
+        $where = $query->getVar('_where');
+        $where = (empty($where) ? ' WHERE ' : $where . " AND ") . implode(' AND ', $clauses);
+        $query->setVar('_where', $where);
       }
-      $where = " $op ( civireport_activity_last_civireport.activity_type_id" . $clause . " ) AND ( activity_last_completed_civireport.activity_type_id" . $clause . " )";
-      $query->setVar('_where', $where);
     }
   }
 
