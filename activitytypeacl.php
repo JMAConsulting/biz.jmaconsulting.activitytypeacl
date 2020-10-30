@@ -155,7 +155,7 @@ function activitytypeacl_civicrm_queryObjects(&$queryObjects, $type) {
 }
 
 function activitytypeacl_civicrm_apiWrappers(&$wrappers, $apiRequest) {
-  if (strpos($_SERVER['REQUEST_URI'], 'civicrm/a') !== false) {
+  if (!empty($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], 'civicrm/a') !== false) {
     if ($apiRequest['entity'] == 'OptionValue' && $apiRequest['action'] == 'get') {
       $wrappers[] = new CRM_ActivityTypeACL_APIWrappers_ACL();
     }
