@@ -165,6 +165,12 @@ function activitytypeacl_civicrm_apiWrappers(&$wrappers, $apiRequest) {
   }
 }
 
+function  activitytypeacl_civicrm_optionValues(&$options, $groupName) {
+  if ($groupName == 'activity_type' && strpos(urldecode($_SERVER['REQUEST_URI']), 'civicrm/contact/search/custom') !== false) {
+    CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($options, CRM_Core_Action::VIEW, TRUE, TRUE);
+  }
+}
+
 /**
  * Implementation of hook_civicrm_buildForm
  *
@@ -433,10 +439,7 @@ function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
     if (!$constituent) {
       $whereClause = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "search");
       if (!empty($clauses['activity_type_id'])) {
-        $clauses['activity_type_id'] .= $whereClause;
-      }
-      else {
-        $clauses['activity_type_id'] = $whereClause;
+        $clauses['activity_type_id'] = $whereClause[0];
       }
     }
   }
