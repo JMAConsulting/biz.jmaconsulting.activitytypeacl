@@ -75,7 +75,11 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
         unset($activities[$actTypeId]);
       }
       elseif ($label) {
-        $activities[$actTypeId] = CRM_Core_PseudoConstant::getLabel('CRM_Activity_BAO_Activity', 'activity_type_id', $actTypeId);
+        $activities[$actTypeId] = civicrm_api3('OptionValue', 'getvalue', [
+          'return' => "label",
+          'option_group_id' => 'activity_type',
+          'value' => $actTypeId,
+        ]);
       }
     }
     self::$_permissionedActivities[$action] = $activities;
@@ -102,7 +106,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
       return "civicrm_activity.activity_type_id" . $clause;
     }
     if ($context == "search") {
-      $query[] = "civicrm_activity.activity_type_id" . $clause;
+      $query[] = $clause;
     }
     if ($context == "report") {
       return " AND ( activity_type_id" . $clause . " )";
@@ -141,6 +145,7 @@ class CRM_ActivityTypeACL_BAO_ACL extends CRM_Core_DAO {
         $query->setVar('_where', $where);
       }
     }
+    return $query;
   }
 
   /**
