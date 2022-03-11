@@ -83,4 +83,7 @@ class CRM_ActivityTypeACL_BAO_Query {
   public static function alterSearchBuilderOptions(&$apiEntities, &$fieldOptions) {
   }
 
+  public static function defaultReturnProperties($mode) {
+  }
+
 }
