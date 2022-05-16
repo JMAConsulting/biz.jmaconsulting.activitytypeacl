@@ -6,13 +6,12 @@ class CRM_ActivityTypeACL_APIWrappers_ACL implements API_Wrapper {
    * Conditionally changes contact_type parameter for the API request.
    */
   public function fromApiInput($apiRequest) {
-    if ('activity_type' == CRM_Utils_Array::value('option_group_id', $apiRequest['params'])) {
-      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
-      // Add this as this is required.
+    if ($apiRequest['entity'] == 'Activity' && $apiRequest['action'] == 'get') {
+      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE);
       $activityOptions[CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', 'Open Case')] = "Open Case";
-      $apiRequest['params']['value'] = ['IN' => array_keys($activityOptions)];
+      $apiRequest['params']['activity_type_id'] = ['IN' => array_keys($activityOptions)];
     }
-
+    // CRM_Core_Error::debug('apiRequest new', $apiRequest);
     return $apiRequest;
   }
 

@@ -163,6 +163,9 @@ function activitytypeacl_civicrm_apiWrappers(&$wrappers, $apiRequest) {
   if ($apiRequest['entity'] == 'CaseType' && $apiRequest['action'] == 'get') {
     $wrappers[] = new CRM_ActivityTypeACL_APIWrappers_ACL();
   }
+  if ($apiRequest['entity'] == 'Activity' && $apiRequest['action'] == 'get') {
+    $wrappers[] = new CRM_ActivityTypeACL_APIWrappers_ACL();
+  }
 }
 
 /**
