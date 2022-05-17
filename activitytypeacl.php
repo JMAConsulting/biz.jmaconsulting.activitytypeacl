@@ -444,3 +444,40 @@ function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
     }
   }
 }
+/**
+ * Implementation of hook_civicrm_links
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_links/
+ */
+
+function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$mask, &$values) {
+  // get in ids of each of the permissioned activities that are able to add, edit, and delete
+  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_add, CRM_Core_Action::ADD, FALSE, TRUE);
+  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
+  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
+  // objectName = Activity and op = activity.tab.row indicates where the action links are located
+  // to help determine all available objectName and op values, it can be helpful to use the CRM_Core_Error::debug_var function
+  switch ($objectName) {
+    case 'Activity':
+      switch ($op) {
+        case 'activity.tab.row':
+          // use the API to return the information about the activity the link is found in by using the objectId as a parameter 
+          $result = civicrm_api3('Activity', 'get', [
+            'sequential' => 1,
+            'id' => $objectId,
+          ]);
+          // check of the activity_type_id (a unique id for each activity, ie. Volunteer = 67) is found in the permissioned activities list
+          // array_keys is needed because the index of each activity in the actvityOptions arrays correponnds to the action_type_id of the activity
+          // the index of the links correspond to the add, edit, and delete links
+          if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_add))) {
+            unset($links[0]);
+          }
+          if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_edit))) {
+            unset($links[1]);
+          }
+          if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_delete))) {
+            unset($links[2]);
+          }
+      }
+  }
+}
