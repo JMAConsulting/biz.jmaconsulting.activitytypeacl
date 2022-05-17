@@ -11,7 +11,6 @@ class CRM_ActivityTypeACL_APIWrappers_ACL implements API_Wrapper {
       $activityOptions[CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', 'Open Case')] = "Open Case";
       $apiRequest['params']['activity_type_id'] = ['IN' => array_keys($activityOptions)];
     }
-    // CRM_Core_Error::debug('apiRequest new', $apiRequest);
     return $apiRequest;
   }
 
