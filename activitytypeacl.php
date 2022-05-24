@@ -409,7 +409,7 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
     if (isset($var['civicrm_activity']['filters']['activity_type_id'])) {
       $var['civicrm_activity']['filters']['activity_type_id'] = array(
         'title' => ts('Activity Type'),
-        'operatorType' => CRM_Report_Form::OP_SELECT,
+        'operatorType' => CRM_Report_Form::OP_MULTISELECT,
         'options' => CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::VIEW, FALSE, TRUE),
       );
     }
@@ -493,5 +493,42 @@ function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$m
             unset($links[2]);
           }          
       }
+  }
+}
+
+/**
+ * Implementation of hook_civicrm_alterContent
+ * 
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_alterContent/
+ */
+
+function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$object) {
+  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
+  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
+  if($context == "form") {
+    if($tplName == "CRM/Activity/Form/Activity.tpl") {
+      if (!in_array($object -> _activityTypeId, array_keys($activityOptions_edit))) {
+        $editButtonIndex = strpos($content, "title=\"Edit\"");
+        $startEdit = $editButtonIndex;
+        $endEdit = $editButtonIndex;
+        while ($content[$startEdit] != '<') {
+          $startEdit--;
+        }
+        $endEdit = strpos(substr($content, $startEdit), "</a>");
+        $editButton = substr($content, $startEdit, ($endEdit + 4));
+        $content = str_replace($editButton,"",$content);
+      }
+      if (!in_array($object -> _activityTypeId, array_keys($activityOptions_delete))) {
+        $deleteButtonIndex = strpos($content, "title=\"Delete\"");
+        $startEdit = $deleteButtonIndex;
+        $endEdit = $deleteButtonIndex;
+        while ($content[$startEdit] != '<') {
+          $startEdit--;
+        }
+        $endEdit = strpos(substr($content, $startEdit), "</a>");
+        $deleteButton = substr($content, $startEdit, ($endEdit + 4));
+        $content = str_replace($deleteButton,"",$content);
+      }
+    }
   }
 }
