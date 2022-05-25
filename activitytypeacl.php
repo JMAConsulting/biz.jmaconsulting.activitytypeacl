@@ -503,19 +503,25 @@ function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$m
  */
 
 function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$object) {
-  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
-  CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
+  // check if the we are viewing the details of a specific activity
   if($context == "form") {
-    if($tplName == "CRM/Activity/Form/Activity.tpl") {
+    if($tplName == "CRM/Activity/Form/Activity.tpl" && ($object -> _action & CRM_Core_Action::VIEW)) {
+      // get values for activites with edit and delete permissions
+      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
+      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
       if (!in_array($object -> _activityTypeId, array_keys($activityOptions_edit))) {
+        // find the index of the html content string for the edit tag
         $editButtonIndex = strpos($content, "title=\"Edit\"");
         $startEdit = $editButtonIndex;
         $endEdit = $editButtonIndex;
+        // decrement the index until the start of the <a> tag is found
         while ($content[$startEdit] != '<') {
           $startEdit--;
         }
+        // find the index of the end of the <a> tag
         $endEdit = strpos(substr($content, $startEdit), "</a>");
         $editButton = substr($content, $startEdit, ($endEdit + 4));
+        // remove the <a> tag for the edit button from the html
         $content = str_replace($editButton,"",$content);
       }
       if (!in_array($object -> _activityTypeId, array_keys($activityOptions_delete))) {
