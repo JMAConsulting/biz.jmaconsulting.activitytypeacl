@@ -175,7 +175,6 @@ function activitytypeacl_civicrm_apiWrappers(&$wrappers, $apiRequest) {
  */
 function activitytypeacl_civicrm_buildForm($formName, &$form) {
   // Restrict activity types available in the "New Activity" creation list on contact summary page.
-  CRM_Core_Error::debug_log_message('===============');
   if ($formName == "CRM_Activity_Form_ActivityLinks") {
     CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions, CRM_Core_Action::ADD, FALSE, TRUE);
     $activityTypes = CRM_Core_Smarty::singleton()->get_template_vars('activityTypes');
@@ -216,7 +215,6 @@ function activitytypeacl_civicrm_buildForm($formName, &$form) {
       CRM_Utils_System::civiExit();
     }
   }
-  CRM_Core_Error::debug_var('formName', $formName);
   if ($formName == "CRM_Report_Form_Contact_Detail") {
     CRM_Core_Session::singleton()->set('isConstituent', TRUE);
   }
@@ -437,12 +435,10 @@ function activitytypeacl_civicrm_alterReportVar($varType, &$var, &$object) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_selectWhereClause
  */
 function activitytypeacl_civicrm_selectWhereClause($entity, &$clauses) {
-  CRM_Core_Error::debug_var('entity', $entity);
   if ($entity == "Activity") {
     $constituent = CRM_Core_Session::singleton()->get('isConstituent');
     // check if the page is the Activity Detaisl report
     $activityDetail = CRM_Core_Session::singleton()->get('isActivityDetail');
-    CRM_Core_Error::debug_var('ac', $activityDetail);
     if (!$constituent) {
       $whereClause = CRM_ActivityTypeACL_BAO_ACL::getAdditionalActivityClause($where, "search");
       if (!empty($clauses['activity_type_id'])) {
@@ -474,7 +470,6 @@ function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$m
   CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
   // $objectName = 'Activity' and $op = 'activity.tab.row' indicates where the action links are located
   // to help determine all available $objectName and $op values, it can be helpful to use the CRM_Core_Error::debug_var function
-  CRM_Core_Error::debug_var('objectName', $objectName);
   switch ($objectName) {
     case 'Activity':
       switch ($op) {
@@ -522,8 +517,6 @@ function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$m
 
 function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$object) {
   // check if the we are viewing the details of a specific activity
-  CRM_Core_Error::debug_var("tplName", $tplName);
-  CRM_Core_Error::debug_var("context", $context);
   if($context == "form") {
     if(($tplName == "CRM/Activity/Form/Activity.tpl") && ($object -> _action & CRM_Core_Action::VIEW)) {
       // get values for activites with edit and delete permissions
@@ -557,7 +550,7 @@ function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$o
       }
     }
   }
-  // Set the boolean indicating that the current page is the Activity Details Report to false
+  // Set the boolean indicating the current page is the Activity Details Report to false
   if ($tplName != 'CRM/Report/Form/Activity.tpl') {
     CRM_Core_Session::singleton()->set('isActivityDetail', FALSE);
   }
