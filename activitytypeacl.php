@@ -479,32 +479,61 @@ function activitytypeacl_civicrm_links($op, $objectName, $objectId, &$links, &$m
             'sequential' => 1,
             'id' => $objectId,
           ]);
+          // get the indicies of each button type
+          $linkIndices = [];
+          for ($i = 0; $i <= count($links); $i++) {
+            if ($links[$i]['name'] == 'View'){
+              $linkIndices['View'] = $i;
+            }
+            elseif ($links[$i]['name'] == 'Edit'){
+              $linkIndices['Edit'] = $i;
+            }
+            elseif ($links[$i]['name'] == 'Delete'){
+              $linkIndices['Delete'] = $i;
+            }
+          };
+          unset($i);
           // check if the activity_type_id (a unique id for each activity, ie. Volunteer = 67) is found in the permissioned activities list
           // array_keys is needed because the index of each activity in the actvityOptions arrays correponnds to the action_type_id of the activity
           // the indices of the $links correspond to the add, edit, and delete links
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_view))) {
-            unset($links[0]);
+            unset($links[$linkIndices['View']]);
           }
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_edit))) {
-            unset($links[1]);
+            unset($links[$linkIndices['Edit']]);
           }
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_delete))) {
-            unset($links[2]);
+            unset($links[$linkIndices['Delete']]);
           }
+          unset($linkIndices);
         case 'activity.selector.row':
           $result = civicrm_api3('Activity', 'get', [
             'sequential' => 1,
             'id' => $objectId,
-          ]);
+          ]);   
+          $linkIndices = [];
+          for ($i = 0; $i <= count($links); $i++) {
+            if ($links[$i]['name'] == 'View'){
+              $linkIndices['View'] = $i;
+            }
+            elseif ($links[$i]['name'] == 'Edit'){
+              $linkIndices['Edit'] = $i;
+            }
+            elseif ($links[$i]['name'] == 'Delete'){
+              $linkIndices['Delete'] = $i;
+            }
+          };
+          unset($i);
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_view))) {
-            unset($links[0]);
+            unset($links[$linkIndices['View']]);
           }
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_edit))) {
-            unset($links[1]);
+            unset($links[$linkIndices['Edit']]);
           }
           if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_delete))) {
-            unset($links[2]);
-          }          
+            unset($links[$linkIndices['Delete']]);
+          }     
+          unset($linkIndices);  
       }
   }
 }
@@ -522,6 +551,7 @@ function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$o
       // get values for activites with edit and delete permissions
       CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
       CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
+      // CRM_Core_Error::debug_var('array_keys:', array_keys($activityOptions_delete));
       if (!in_array($object -> _activityTypeId, array_keys($activityOptions_edit))) {
         // find the index of the html content string for the edit tag
         $editButtonIndex = strpos($content, "title=\"Edit\"");
@@ -549,37 +579,46 @@ function activitytypeacl_civicrm_alterContent(&$content, $context, $tplName, &$o
         $content = str_replace($deleteButton,"",$content);
       }
     }
-  }
-  if($context == "page") {
-    if(($tplName == "CRM/Activity/Page/Tab.tpl") && ($object -> _action & CRM_Core_Action::VIEW)) {
-      // get values for activites with edit and delete permissions
-      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
-      CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
-      if (!in_array($object -> _activityTypeId, array_keys($activityOptions_edit))) {
-        // find the index of the html content string for the edit tag
-        $editButtonIndex = strpos($content, "title=\"Edit\"");
-        $startEdit = $editButtonIndex;
-        $endEdit = $editButtonIndex;
-        // decrement the index until the start of the <a> tag is found
-        while ($content[$startEdit] != '<') {
-          $startEdit--;
+    if (get_class($object) == "CRM_Case_Form_ActivityView") {
+      if(($tplName == "CRM/Case/Form/ActivityView.tpl")) {
+        // get values for activites with edit and delete permissions
+        CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_edit, CRM_Core_Action::UPDATE, FALSE, TRUE);
+        CRM_ActivityTypeACL_BAO_ACL::getPermissionedActivities($activityOptions_delete, CRM_Core_Action::DELETE, FALSE, TRUE);
+        // get activityID of selected activity from the template (instead of the php file)
+        $activityID = CRM_Core_Smarty::singleton()->get_template_vars('activityID');
+        // call the API using the activityID to get activity_type_id
+        $result = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'id' => $activityID,
+        ]);
+        if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_edit))) {
+          // find the index of the html content string for the edit tag
+          $editButtonIndex = strpos($content, "name=\"Edit\"");
+          $startEdit = $editButtonIndex;
+          $endEdit = $editButtonIndex;
+          // decrement the index until the start of the <a> tag is found
+          while ($content[$startEdit] != '<') {
+            $startEdit--;
+          }
+          // find the index of the end of the <a> tag
+          $endEdit = strpos(substr($content, $startEdit), "</a>");
+          $editButton = substr($content, $startEdit, ($endEdit + 4));
+          // remove the <a> tag for the edit button from the html
+          $content = str_replace($editButton,"",$content);
         }
-        // find the index of the end of the <a> tag
-        $endEdit = strpos(substr($content, $startEdit), "</a>");
-        $editButton = substr($content, $startEdit, ($endEdit + 4));
-        // remove the <a> tag for the edit button from the html
-        $content = str_replace($editButton,"",$content);
-      }
-      if (!in_array($object -> _activityTypeId, array_keys($activityOptions_delete))) {
-        $deleteButtonIndex = strpos($content, "title=\"Delete\"");
-        $startEdit = $deleteButtonIndex;
-        $endEdit = $deleteButtonIndex;
-        while ($content[$startEdit] != '<') {
-          $startEdit--;
+        if (!in_array($result['values'][0]['activity_type_id'], array_keys($activityOptions_delete))) {
+          CRM_Core_Error::debug_var('array_keys_delete:', array_keys($activityOptions_delete));
+          CRM_Core_Error::debug_log_message("DELETE ACTIVE");
+          $deleteButtonIndex = strpos($content, "name=\"Delete\"");
+          $startEdit = $deleteButtonIndex;
+          $endEdit = $deleteButtonIndex;
+          while ($content[$startEdit] != '<') {
+            $startEdit--;
+          }
+          $endEdit = strpos(substr($content, $startEdit), "</a>");
+          $deleteButton = substr($content, $startEdit, ($endEdit + 4));
+          $content = str_replace($deleteButton,"",$content);
         }
-        $endEdit = strpos(substr($content, $startEdit), "</a>");
-        $deleteButton = substr($content, $startEdit, ($endEdit + 4));
-        $content = str_replace($deleteButton,"",$content);
       }
     }
   }
